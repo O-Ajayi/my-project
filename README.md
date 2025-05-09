@@ -11,3 +11,8 @@
 ##### push image to repo
 
     docker tag java-app demo-app:java-1.0
+
+<!-- #${{matrix}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest] -->
