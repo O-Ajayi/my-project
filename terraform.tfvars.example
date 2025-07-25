@@ -1,0 +1,57 @@
+# Copy this file to terraform.tfvars and customize the values as needed
+
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Project Configuration
+project_name = "my-nlb-project"
+environment  = "production"
+
+# Network Configuration
+vpc_cidr     = "10.0.0.0/16"
+subnet_count = 3  # Deploy across 3 AZs for better availability
+
+# Load Balancer Configuration
+enable_deletion_protection       = true   # Enable for production
+enable_cross_zone_load_balancing = true
+
+# Target Group Configuration
+target_port   = 8080
+listener_port = 80
+protocol      = "TCP"  # Options: TCP, UDP, TCP_UDP, TLS, HTTP
+target_type   = "instance"  # Options: instance, ip, lambda, alb
+
+# Health Check Configuration
+health_check_healthy_threshold   = 2
+health_check_unhealthy_threshold = 2
+health_check_interval            = 10
+health_check_timeout             = 6
+health_check_path                = "/health"  # Only for HTTP/HTTPS
+
+# Target Instance Configuration
+create_target_instances = true
+target_instance_count   = 4
+instance_type          = "t3.small"
+
+# Example configurations for different use cases:
+
+# For HTTPS/TLS termination:
+# protocol      = "TLS"
+# target_port   = 443
+# listener_port = 443
+
+# For UDP load balancing:
+# protocol      = "UDP"
+# target_port   = 53
+# listener_port = 53
+
+# For IP targets (containers, etc.):
+# target_type             = "ip"
+# create_target_instances = false
+
+# For high-traffic production:
+# subnet_count                     = 3
+# enable_deletion_protection       = true
+# health_check_interval            = 10
+# health_check_timeout             = 6
+# instance_type                   = "m5.large"
