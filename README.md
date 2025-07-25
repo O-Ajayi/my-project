@@ -1,6 +1,6 @@
 # AWS Network Load Balancer with Terraform
 
-This Terraform configuration creates an AWS Network Load Balancer (NLB) with an internal scheme, along with all necessary supporting infrastructure including VPC, subnets, target groups, and optional target instances.
+This Terraform configuration creates an AWS Network Load Balancer (NLB) that can be either public or internal, along with all necessary supporting infrastructure including VPC, subnets, target groups, and optional target instances.
 
 ## Architecture
 
@@ -10,14 +10,14 @@ The configuration creates:
 - **Public and Private Subnets** across multiple Availability Zones
 - **Internet Gateway** and **NAT Gateways** for outbound connectivity
 - **Route Tables** and associations for proper traffic routing
-- **Network Load Balancer** with internal scheme
+- **Network Load Balancer** with configurable public/internal scheme
 - **Target Group** with configurable health checks
 - **Security Groups** for target instances
 - **Optional EC2 instances** as targets with a sample web application
 
 ## Features
 
-- ✅ **Internal Network Load Balancer** - Only accessible from within the VPC
+- ✅ **Flexible Network Load Balancer** - Can be public (internet-facing) or internal
 - ✅ **Multi-AZ Deployment** - High availability across multiple zones
 - ✅ **Configurable Protocols** - Supports TCP, UDP, TCP_UDP, TLS, and HTTP
 - ✅ **Health Checks** - Configurable health check parameters
@@ -69,6 +69,7 @@ vpc_cidr     = "10.0.0.0/16"
 subnet_count = 2
 
 # Load balancer settings
+internal_nlb  = false  # Set to true for internal-only access
 target_port   = 80
 listener_port = 80
 protocol      = "TCP"
@@ -120,6 +121,22 @@ target_type             = "ip"
 create_target_instances = false
 ```
 
+### 5. Public Web Application
+```hcl
+internal_nlb  = false
+protocol      = "TCP"
+target_port   = 80
+listener_port = 80
+```
+
+### 6. Internal Microservices
+```hcl
+internal_nlb  = true
+protocol      = "TCP"
+target_port   = 8080
+listener_port = 8080
+```
+
 ## Variables
 
 | Variable | Description | Type | Default |
@@ -129,6 +146,7 @@ create_target_instances = false
 | `environment` | Environment name (dev/staging/prod) | `string` | `"dev"` |
 | `vpc_cidr` | CIDR block for the VPC | `string` | `"10.0.0.0/16"` |
 | `subnet_count` | Number of subnets (min 2 for HA) | `number` | `2` |
+| `internal_nlb` | Whether NLB is internal (true) or public (false) | `bool` | `false` |
 | `protocol` | Protocol (TCP/UDP/TCP_UDP/TLS/HTTP) | `string` | `"TCP"` |
 | `target_port` | Port on target instances | `number` | `80` |
 | `listener_port` | Port on load balancer | `number` | `80` |
@@ -157,18 +175,25 @@ target_group_arn = "arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgr
 If you created the example target instances (`create_target_instances = true`), you can test the load balancer:
 
 1. **Get the NLB DNS name** from the Terraform outputs
-2. **Connect from within the VPC** (since it's internal):
-   ```bash
-   curl http://internal-nlb-dns-name
-   ```
-3. **View the sample application** - Shows instance metadata and request counting
+2. **Connect to the load balancer**:
+   - **For public NLB** (`internal_nlb = false`): Access from anywhere on the internet
+     ```bash
+     curl http://public-nlb-dns-name
+     ```
+   - **For internal NLB** (`internal_nlb = true`): Access only from within the VPC
+     ```bash
+     curl http://internal-nlb-dns-name
+     ```
+3. **View the sample application** in your browser - Shows instance metadata and request counting
 
 ## Security Considerations
 
-- The NLB is **internal only** - not accessible from the internet
-- Target instances are in **private subnets**
-- Security groups restrict access to the **target port only**
+- **Public NLB** (`internal_nlb = false`): Accessible from the internet with security groups allowing traffic from anywhere
+- **Internal NLB** (`internal_nlb = true`): Only accessible from within the VPC with security groups restricting to VPC CIDR
+- Target instances are in **private subnets** for security
 - NAT Gateways provide **outbound internet access** for updates
+- Consider restricting source IPs in security groups for production use
+- For public NLBs, consider adding WAF or additional security layers
 
 ## Cost Optimization
 
@@ -197,9 +222,10 @@ terraform destroy
    - Check health check configuration
 
 2. **Cannot connect to NLB**
-   - Ensure you're connecting from within the VPC (internal NLB)
+   - Ensure the NLB is fully provisioned (can take a few minutes)
    - Verify DNS name and port
-   - Check route tables and security groups
+   - Check security groups allow traffic from your IP
+   - Ensure target instances are healthy
 
 3. **Terraform errors**
    - Ensure AWS credentials are configured

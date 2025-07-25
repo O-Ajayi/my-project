@@ -36,6 +36,12 @@ variable "subnet_count" {
 }
 
 # Load Balancer Configuration
+variable "internal_nlb" {
+  description = "Whether the NLB should be internal (true) or public (false)"
+  type        = bool
+  default     = false
+}
+
 variable "enable_deletion_protection" {
   description = "Enable deletion protection for the load balancer"
   type        = bool

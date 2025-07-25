@@ -156,7 +156,8 @@ resource "aws_security_group" "nlb_targets" {
     from_port   = var.target_port
     to_port     = var.target_port
     protocol    = var.protocol
-    cidr_blocks = [var.vpc_cidr]
+    cidr_blocks = var.internal_nlb ? [var.vpc_cidr] : ["0.0.0.0/0"]
+    description = var.internal_nlb ? "Allow traffic from VPC" : "Allow traffic from internet"
   }
 
   egress {
@@ -202,9 +203,9 @@ resource "aws_lb_target_group" "main" {
 # Network Load Balancer
 resource "aws_lb" "main" {
   name               = "${var.project_name}-nlb"
-  internal           = true
+  internal           = var.internal_nlb
   load_balancer_type = "network"
-  subnets            = aws_subnet.private[*].id
+  subnets            = var.internal_nlb ? aws_subnet.private[*].id : aws_subnet.public[*].id
 
   enable_deletion_protection       = var.enable_deletion_protection
   enable_cross_zone_load_balancing = var.enable_cross_zone_load_balancing

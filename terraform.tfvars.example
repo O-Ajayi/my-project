@@ -1,4 +1,5 @@
 # Copy this file to terraform.tfvars and customize the values as needed
+# NOTE: This creates a PUBLIC Network Load Balancer accessible from the internet
 
 # AWS Configuration
 aws_region = "us-west-2"
@@ -12,6 +13,7 @@ vpc_cidr     = "10.0.0.0/16"
 subnet_count = 3  # Deploy across 3 AZs for better availability
 
 # Load Balancer Configuration
+internal_nlb                     = false  # Set to true for internal-only access
 enable_deletion_protection       = true   # Enable for production
 enable_cross_zone_load_balancing = true
 

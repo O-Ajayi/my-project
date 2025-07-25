@@ -47,7 +47,7 @@ output "nlb_zone_id" {
 }
 
 output "nlb_internal" {
-  description = "Whether the NLB is internal"
+  description = "Whether the NLB is internal (false = public)"
   value       = aws_lb.main.internal
 }
 
@@ -119,5 +119,6 @@ output "connection_info" {
     listener_port   = var.listener_port
     protocol        = var.protocol
     connection_url  = "${lower(var.protocol)}://${aws_lb.main.dns_name}:${var.listener_port}"
+    access_type     = var.internal_nlb ? "Internal - accessible from VPC only" : "Public - accessible from internet"
   }
 }
